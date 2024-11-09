@@ -59,8 +59,7 @@
     <!-- Dashboard with Logout Button -->
     <div id="dashboard"
         class="container dashboard-container d-flex flex-column align-items-center justify-content-center">
-        <button class="btn btn-danger" id="logoutBtn"
-            style="position: absolute; top: 20px; right: 20px;">Logout</button>
+        <button class="btn btn-danger" id="logoutBtn" style="position: absolute; top: 20px; right: 20px;">Logout</button>
         <div class="welcome-text">
             Welcome to the System: <strong id="userEmail"></strong>
         </div>
@@ -85,7 +84,7 @@
     <!-- Register Student Section (Hidden initially) -->
     <div id="register-student-section" class="container mt-5">
         <button class="btn btn-secondary mb-4" id="backToDashboardBtn">Back to Dashboard</button>
-        <h3 class="mb-4">Register a New Student</h3>
+        <h3 id="student-form-title" class="mb-4">Register a New Student</h3>
 
         <!-- Breadcrumb -->
         <nav aria-label="breadcrumb">
@@ -111,7 +110,7 @@
                         <label for="lastName" class="form-label">Last Name</label>
                         <input type="text" id="lastName" class="form-control" placeholder="Enter Last Name" required>
                     </div>
-                    <button type="submit" class="btn btn-primary">Add Student</button>
+                    <button type="submit" class="btn btn-primary" id="submit-button">Add Student</button>
                 </form>
             </div>
         </div>
@@ -173,6 +172,7 @@
         document.getElementById('backToDashboardBtn').addEventListener('click', function () {
             document.getElementById('register-student-section').style.display = 'none';
             document.getElementById('dashboard').classList.remove('d-none');
+            resetForm();
         });
 
         // Breadcrumb link to Dashboard
@@ -180,35 +180,81 @@
             event.preventDefault();
             document.getElementById('register-student-section').style.display = 'none';
             document.getElementById('dashboard').classList.remove('d-none');
+            resetForm();
         });
 
-        // Add a student to the table
+        // Reset form and heading to default
+        function resetForm() {
+            document.getElementById('student-form').reset();
+            document.getElementById('student-form-title').textContent = "Register a New Student";
+            document.getElementById('submit-button').textContent = "Add Student";
+            document.getElementById('submit-button').removeAttribute('data-editing');
+        }
+
+        // Add or update a student in the table
         document.getElementById('student-form').addEventListener('submit', function (event) {
             event.preventDefault();
             const studentId = document.getElementById('studentId').value.trim();
             const firstName = document.getElementById('firstName').value.trim();
             const lastName = document.getElementById('lastName').value.trim();
 
-            const tableBody = document.getElementById('student-table-body');
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${studentId}</td>
-                <td>${firstName}</td>
-                <td>${lastName}</td>
-                <td>
-                    <button class="btn btn-sm btn-info me-1">Edit</button>
-                    <button class="btn btn-sm btn-danger me-1">Delete</button>
-                    <button class="btn btn-sm btn-warning">Attach Subject</button>
-                </td>
-            `;
-            tableBody.appendChild(row);
+            const submitButton = document.getElementById('submit-button');
+            const editingRowIndex = submitButton.getAttribute('data-editing');
 
-            // Clear form fields
-            document.getElementById('student-form').reset();
+            if (editingRowIndex) {
+                // Update existing row
+                const tableBody = document.getElementById('student-table-body');
+                const row = tableBody.rows[editingRowIndex - 1];
+                row.cells[0].textContent = studentId;
+                row.cells[1].textContent = firstName;
+                row.cells[2].textContent = lastName;
+            } else {
+                // Add new row
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${studentId}</td>
+                    <td>${firstName}</td>
+                    <td>${lastName}</td>
+                    <td>
+                        <button class="btn btn-sm btn-info me-1 edit-btn">Edit</button>
+                        <button class="btn btn-sm btn-danger me-1 delete-btn">Delete</button>
+                        <button class="btn btn-sm btn-warning">Attach Subject</button>
+                    </td>
+                `;
+                document.getElementById('student-table-body').appendChild(row);
+            }
+
+            resetForm();
+        });
+
+        // Handle Edit and Delete actions in the student list
+        document.getElementById('student-table-body').addEventListener('click', function (event) {
+            const target = event.target;
+            const row = target.closest('tr');
+
+            if (target.classList.contains('edit-btn')) {
+                // Get current student data
+                const studentId = row.cells[0].textContent;
+                const firstName = row.cells[1].textContent;
+                const lastName = row.cells[2].textContent;
+
+                // Update form fields and titles for editing
+                document.getElementById('studentId').value = studentId;
+                document.getElementById('firstName').value = firstName;
+                document.getElementById('lastName').value = lastName;
+                document.getElementById('student-form-title').textContent = "Edit Student";
+                document.getElementById('submit-button').textContent = "Update Student";
+                document.getElementById('submit-button').setAttribute('data-editing', row.rowIndex);
+            }
+
+            if (target.classList.contains('delete-btn')) {
+                // Remove the selected row
+                row.remove();
+            }
         });
     </script>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
 </body>
 
 </html>
