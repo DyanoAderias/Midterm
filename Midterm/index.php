@@ -8,31 +8,20 @@ if (isset($_SESSION['email'])) {
     exit;
 }
 
-
-
-
 // Predefined users (email => password)
 $users = [
-    'Username1@email.com' => 'password1', // password for user1
-    'Username2@email.com' => 'password2', // password for user2
-    'Username3@email.com' => 'password3', // password for user3
-    'Username4@email.com' => 'password4', // password for user4
-    'Username5@email.com' => 'password5'  // password for user5
+    'user1@email.com' => 'password1', // password for user1
+    'user2@email.com' => 'password2', // password for user2
+    'user3@email.com' => 'password3', // password for user3
+    'user4@email.com' => 'password4', // password for user4
+    'user5@email.com' => 'password5'  // password for user5
 ];
-
-
-
 
 // Initialize variables
 $email = $password = '';
 $emailErr = $passwordErr = '';
 $errorDetails = [];
 $loginError = '';
-
-
-
-
-
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -84,7 +73,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $loginError = 'System Errors:';
     }
 }
-
 ?>
 
 <!DOCTYPE html>
@@ -95,7 +83,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <title>Bootstrap Login</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-
 <body>
     <div class="container d-flex justify-content-center align-items-center min-vh-100">
         <div class="w-100" style="max-width: 400px;">
@@ -134,5 +121,4 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <!-- Bootstrap 5 JS, Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-
 </html>
