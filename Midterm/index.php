@@ -23,7 +23,6 @@ $users = [
 
 
 
-
 // Initialize variables
 $email = $password = '';
 $emailErr = $passwordErr = '';
