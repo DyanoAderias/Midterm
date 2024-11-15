@@ -13,11 +13,11 @@ if (isset($_SESSION['email'])) {
 
 // Predefined users (email => password)
 $users = [
-    'Username@email.com' => 'Pass1', // password for user1
-    'Username1@email.com' => 'Pass2', // password for user2
-    'Username2@email.com' => 'Pass3', // password for user3
-    'Username3@email.com' => 'Pass4', // password for user4
-    'Username4@email.com' => 'Pass5'  // password for user5
+    'Username1@email.com' => 'password1', // password for user1
+    'Username2@email.com' => 'password2', // password for user2
+    'Username3@email.com' => 'password3', // password for user3
+    'Username4@email.com' => 'password4', // password for user4
+    'Username5@email.com' => 'password5'  // password for user5
 ];
 
 
@@ -28,6 +28,7 @@ $email = $password = '';
 $emailErr = $passwordErr = '';
 $errorDetails = [];
 $loginError = '';
+
 
 
 
