@@ -1,53 +1,128 @@
+<?php
+session_start(); // Start the session to store session variables
+
+// Check if the user is already logged in
+if (isset($_SESSION['email'])) {
+    // If logged in, redirect to dashboard
+    header('Location: dashboard.php');
+    exit;
+}
+
+
+
+
+// Predefined users (email => password)
+$users = [
+    'Username@email.com' => 'Pass1', // password for user1
+    'Username1@email.com' => 'Pass2', // password for user2
+    'Username2@email.com' => 'Pass3', // password for user3
+    'Username3@email.com' => 'Pass4', // password for user4
+    'Username4@email.com' => 'Pass5'  // password for user5
+];
+
+
+
+
+
+// Initialize variables
+$email = $password = '';
+$emailErr = $passwordErr = '';
+$errorDetails = [];
+$loginError = '';
+
+
+
+
+
+// Handle form submission
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $email = trim($_POST['email']);  // Trim leading/trailing spaces
+    $password = $_POST['password'];
+
+    // Validate email
+    if (empty($email)) {
+        $emailErr = 'Email is required.';
+        $errorDetails[] = $emailErr; // Add error to details array
+    } else {
+        // Sanitize and validate email format
+        $email = filter_var($email, FILTER_SANITIZE_EMAIL);
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $emailErr = 'Invalid email format.';
+            $errorDetails[] = $emailErr;
+        }
+    }
+
+    // Validate password
+    if (empty($password)) {
+        $passwordErr = 'Password is required.';
+        $errorDetails[] = $passwordErr; // Add error to details array
+    }
+
+    // Check if both email and password are provided
+    if (empty($emailErr) && empty($passwordErr)) {
+        // Normalize email to lowercase (case-insensitive comparison)
+        $normalizedEmail = strtolower($email);
+
+        // Check if email exists in predefined users (case-insensitive)
+        if (array_key_exists($normalizedEmail, $users)) {
+            // Compare the entered password with the stored password
+            if ($users[$normalizedEmail] !== $password) {
+                $errorDetails[] = 'Password is incorrect.';
+            } else {
+                // If login is successful, store the user's email in the session
+                $_SESSION['email'] = $email; // Save email in session
+                header('Location: dashboard.php'); // Redirect to dashboard.php
+                exit; // Stop further script execution to prevent page rendering
+            }
+        } else {
+            $errorDetails[] = 'Email not found.';
+        }
+    }
+
+    // If there are errors, set the login error message
+    if (!empty($errorDetails)) {
+        $loginError = 'System Errors:';
+    }
+}
+
+?>
+
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login and Dashboard</title>
+    <title>Bootstrap Login</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        .dashboard-container,
-        #register-student-section {
-            min-height: 100vh;
-            display: none;
-        }
-
-        .welcome-text {
-            font-size: 1.5rem;
-            margin-top: 20px;
-        }
-
-        .card-container {
-            display: flex;
-            gap: 20px;
-            margin-top: 30px;
-        }
-
-        .card-body {
-            text-align: center;
-        }
-    </style>
 </head>
 
 <body>
-    <!-- Login Form (Visible initially) -->
-    <div id="login-form" class="container d-flex justify-content-center align-items-center min-vh-100">
+    <div class="container d-flex justify-content-center align-items-center min-vh-100">
         <div class="w-100" style="max-width: 400px;">
-            <div id="error-box" class="alert alert-danger d-none" role="alert">
-                Please enter a valid email address and password.
-            </div>
+            <!-- Error Message -->
+            <?php if (!empty($loginError)): ?>
+                <div id="error-box" class="alert alert-danger" role="alert">
+                    <strong><?php echo $loginError; ?></strong>
+                    <ul>
+                        <?php foreach ($errorDetails as $error): ?>
+                            <li><?php echo $error; ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+            <?php endif; ?>
+
+            <!-- Login Form -->
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h3 class="card-title text-center mb-4">Login</h3>
-                    <form id="loginForm">
+                    <form method="POST" id="login-form">
                         <div class="mb-3">
                             <label for="email" class="form-label">Email address</label>
-                            <input type="email" class="form-control" id="email" placeholder="Enter email" required>
+                            <input type="email" class="form-control" id="email" name="email" value="<?php echo htmlspecialchars($email); ?>" placeholder="Enter email">
                         </div>
                         <div class="mb-3">
                             <label for="password" class="form-label">Password</label>
-                            <input type="password" class="form-control" id="password" placeholder="Password" required>
+                            <input type="password" class="form-control" id="password" name="password" placeholder="Password">
                         </div>
                         <button type="submit" class="btn btn-primary w-100">Login</button>
                     </form>
@@ -56,205 +131,8 @@
         </div>
     </div>
 
-    <!-- Dashboard with Logout Button -->
-    <div id="dashboard"
-        class="container dashboard-container d-flex flex-column align-items-center justify-content-center">
-        <button class="btn btn-danger" id="logoutBtn" style="position: absolute; top: 20px; right: 20px;">Logout</button>
-        <div class="welcome-text">
-            Welcome to the System: <strong id="userEmail"></strong>
-        </div>
-        <div class="card-container">
-            <div class="card shadow-sm" style="width: 18rem;">
-                <div class="card-header">Add a Subject</div>
-                <div class="card-body">
-                    <p class="card-text">This section allows you to add a new subject in the system.</p>
-                    <a href="#" class="btn btn-primary">Add Subject</a>
-                </div>
-            </div>
-            <div class="card shadow-sm" style="width: 18rem;">
-                <div class="card-header">Register a Student</div>
-                <div class="card-body">
-                    <p class="card-text">This section allows you to register a new student in the system.</p>
-                    <a href="#" class="btn btn-primary" id="registerStudentBtn">Register</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Register Student Section (Hidden initially) -->
-    <div id="register-student-section" class="container mt-5">
-        <button class="btn btn-secondary mb-4" id="backToDashboardBtn">Back to Dashboard</button>
-        <h3 id="student-form-title" class="mb-4">Register a New Student</h3>
-
-        <!-- Breadcrumb -->
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="#" id="breadcrumbDashboardLink">Dashboard</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Register Student</li>
-            </ol>
-        </nav>
-
-        <!-- Register Student Form -->
-        <div class="card mb-4">
-            <div class="card-body">
-                <form id="student-form">
-                    <div class="mb-3">
-                        <label for="studentId" class="form-label">Student ID</label>
-                        <input type="text" id="studentId" class="form-control" placeholder="Enter Student ID" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="firstName" class="form-label">First Name</label>
-                        <input type="text" id="firstName" class="form-control" placeholder="Enter First Name" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="lastName" class="form-label">Last Name</label>
-                        <input type="text" id="lastName" class="form-control" placeholder="Enter Last Name" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary" id="submit-button">Add Student</button>
-                </form>
-            </div>
-        </div>
-
-        <!-- Student List Table -->
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Student List</h5>
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Student ID</th>
-                            <th>First Name</th>
-                            <th>Last Name</th>
-                            <th>Option</th>
-                        </tr>
-                    </thead>
-                    <tbody id="student-table-body">
-                        <!-- Rows will be dynamically added here -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Show the dashboard after login
-        document.getElementById('loginForm').addEventListener('submit', function (event) {
-            event.preventDefault();
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value.trim();
-            const errorBox = document.getElementById('error-box');
-
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!email || !emailRegex.test(email) || !password) {
-                errorBox.classList.remove('d-none');
-            } else {
-                errorBox.classList.add('d-none');
-                document.getElementById('userEmail').textContent = email;
-                document.getElementById('login-form').classList.add('d-none');
-                document.getElementById('dashboard').classList.remove('d-none');
-            }
-        });
-
-        // Handle Logout
-        document.getElementById('logoutBtn').addEventListener('click', function () {
-            document.getElementById('dashboard').classList.add('d-none');
-            document.getElementById('login-form').classList.remove('d-none');
-            document.getElementById('loginForm').reset();
-        });
-
-        // Navigate to Register Student section
-        document.getElementById('registerStudentBtn').addEventListener('click', function () {
-            document.getElementById('dashboard').classList.add('d-none');
-            document.getElementById('register-student-section').style.display = 'block';
-        });
-
-        // Back to Dashboard from Register Student section
-        document.getElementById('backToDashboardBtn').addEventListener('click', function () {
-            document.getElementById('register-student-section').style.display = 'none';
-            document.getElementById('dashboard').classList.remove('d-none');
-            resetForm();
-        });
-
-        // Breadcrumb link to Dashboard
-        document.getElementById('breadcrumbDashboardLink').addEventListener('click', function (event) {
-            event.preventDefault();
-            document.getElementById('register-student-section').style.display = 'none';
-            document.getElementById('dashboard').classList.remove('d-none');
-            resetForm();
-        });
-
-        // Reset form and heading to default
-        function resetForm() {
-            document.getElementById('student-form').reset();
-            document.getElementById('student-form-title').textContent = "Register a New Student";
-            document.getElementById('submit-button').textContent = "Add Student";
-            document.getElementById('submit-button').removeAttribute('data-editing');
-        }
-
-        // Add or update a student in the table
-        document.getElementById('student-form').addEventListener('submit', function (event) {
-            event.preventDefault();
-            const studentId = document.getElementById('studentId').value.trim();
-            const firstName = document.getElementById('firstName').value.trim();
-            const lastName = document.getElementById('lastName').value.trim();
-
-            const submitButton = document.getElementById('submit-button');
-            const editingRowIndex = submitButton.getAttribute('data-editing');
-
-            if (editingRowIndex) {
-                // Update existing row
-                const tableBody = document.getElementById('student-table-body');
-                const row = tableBody.rows[editingRowIndex - 1];
-                row.cells[0].textContent = studentId;
-                row.cells[1].textContent = firstName;
-                row.cells[2].textContent = lastName;
-            } else {
-                // Add new row
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${studentId}</td>
-                    <td>${firstName}</td>
-                    <td>${lastName}</td>
-                    <td>
-                        <button class="btn btn-sm btn-info me-1 edit-btn">Edit</button>
-                        <button class="btn btn-sm btn-danger me-1 delete-btn">Delete</button>
-                        <button class="btn btn-sm btn-warning">Attach Subject</button>
-                    </td>
-                `;
-                document.getElementById('student-table-body').appendChild(row);
-            }
-
-            resetForm();
-        });
-
-        // Handle Edit and Delete actions in the student list
-        document.getElementById('student-table-body').addEventListener('click', function (event) {
-            const target = event.target;
-            const row = target.closest('tr');
-
-            if (target.classList.contains('edit-btn')) {
-                // Get current student data
-                const studentId = row.cells[0].textContent;
-                const firstName = row.cells[1].textContent;
-                const lastName = row.cells[2].textContent;
-
-                // Update form fields and titles for editing
-                document.getElementById('studentId').value = studentId;
-                document.getElementById('firstName').value = firstName;
-                document.getElementById('lastName').value = lastName;
-                document.getElementById('student-form-title').textContent = "Edit Student";
-                document.getElementById('submit-button').textContent = "Update Student";
-                document.getElementById('submit-button').setAttribute('data-editing', row.rowIndex);
-            }
-
-            if (target.classList.contains('delete-btn')) {
-                // Remove the selected row
-                row.remove();
-            }
-        });
-    </script>
-
-
+    <!-- Bootstrap 5 JS, Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
